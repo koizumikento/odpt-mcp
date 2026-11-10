@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "odpt-mcp"
 version = "0.1.0"
-description = "Search Toei stations and railway lines from ODPT"
+description = "Read Toei rail and bus schedules, service notices, and fares from ODPT"
 readme = "README.md"
 requires-python = ">=3.12"
 license = "MIT"
