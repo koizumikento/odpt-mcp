@@ -4,6 +4,8 @@
 
 [uv](https://docs.astral.sh/uv/) と Git が必要です。Python 3.12以上に対応しています。このツールが使う都営交通の公開APIはキー不要です。
 
+[MCP登録](#mcpクライアントに登録する) · [CLI](#cliで使う) · [Pythonライブラリ](#pythonライブラリとして使う)
+
 ## MCPクライアントに登録する
 
 ### Codex
@@ -72,7 +74,7 @@ GitHubから直接実行できます。
 uvx --python 3.12 --from git+https://github.com/koizumikento/odpt-mcp.git@main odpt-mcp search-railway --kind station --query 新宿 --limit 3
 ```
 
-クローン済みの場合は `uv run odpt-mcp` で同じ操作ができます。
+次の例はクローン先で実行します。クローンせずに使う場合は、各行の `uv run odpt-mcp` を上の `uvx` から始まる起動部分に置き換えます。
 
 ```sh
 uv run odpt-mcp get-station-timetable --station-id odpt.Station:Toei.Oedo.Shinjuku --calendar-id odpt.Calendar:Weekday --direction-id odpt.RailDirection:InnerLoop --limit 3
@@ -86,13 +88,15 @@ uv run odpt-mcp get-bus-fare --pattern-id odpt.BusroutePattern:Toei.Shuku74.1200
 
 結果は標準出力にUTF-8のJSONで返ります。各サブコマンドの `--help` で引数を確認できます。
 
-## Pythonから呼び出す
+## Pythonライブラリとして使う
+
+自分のPythonプロジェクト（`pyproject.toml` があるディレクトリ）で依存関係に追加します。
 
 ```sh
-git clone https://github.com/koizumikento/odpt-mcp.git
-cd odpt-mcp
-uv sync --locked
+uv add "git+https://github.com/koizumikento/odpt-mcp.git@main"
 ```
+
+次のコードを `example.py` に保存し、同じディレクトリで `uv run python example.py` を実行します。
 
 ```python
 import asyncio
@@ -103,10 +107,12 @@ from odpt_mcp import get_station_timetable, search_railway
 async def main():
     stations = await search_railway("station", query="新宿", limit=10)
     station = next(
-        item
-        for item in stations["items"]
-        if item["name"] == "新宿" and item["line_id"] == "odpt.Railway:Toei.Oedo"
+        (item for item in stations["items"] if item["id"] == "odpt.Station:Toei.Oedo.Shinjuku"),
+        None,
     )
+    if station is None:
+        print("大江戸線の新宿駅が見つかりませんでした。")
+        return
     result = await get_station_timetable(
         station["id"],
         calendar_id="odpt.Calendar:Weekday",
